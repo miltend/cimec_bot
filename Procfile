@@ -1,0 +1,1 @@
+ web: python cimec_bot.py
