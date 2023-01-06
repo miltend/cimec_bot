@@ -16,7 +16,7 @@ headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleW
 bot = telebot.TeleBot(TOKEN, parse_mode=None)
 
 bot.remove_webhook()
-bot.set_webhook(url=f"https://cimecbot.herokuapp.com/{TOKEN}/")
+bot.set_webhook(url="https://cimecbot.herokuapp.com/bot")
 
 doc = requests.get('https://www.cimec.unitn.it/en', headers=headers)
 soup = BeautifulSoup(doc.text, 'html.parser')
