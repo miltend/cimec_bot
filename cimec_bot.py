@@ -10,10 +10,13 @@ TOKEN = os.environ["TOKEN"]
 # HEADERS = os.environ["HEADERS"]
 headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) '
                          'Chrome/50.0.2661.102 Safari/537.36'}
+# WEBHOOK_URL_BASE = "https://cimecbot.herokuapp.com"
+
 
 bot = telebot.TeleBot(TOKEN, parse_mode=None)
-# bot.remove_webhook()
-# bot.set_webhook(url="https://cimecbot.herokuapp.com/")
+
+bot.remove_webhook()
+bot.set_webhook(url=f"https://cimecbot.herokuapp.com/{TOKEN}/")
 
 doc = requests.get('https://www.cimec.unitn.it/en', headers=headers)
 soup = BeautifulSoup(doc.text, 'html.parser')
@@ -52,8 +55,17 @@ def events_message(message):
 def echo_all(message):
     bot.send_message(message.chat.id, message.text)
 
+@app.route(f"/{TOKEN}/", methods=['POST'])
+def webhook():
+    if flask.request.headers.get('content-type') == 'application/json':
+        json_string = flask.request.get_data().decode('utf-8')
+        update = telebot.types.Update.de_json(json_string)
+        bot.process_new_updates([update])
+        return ''
+    else:
+        flask.abort(403)
 
-bot.infinity_polling()
+# bot.infinity_polling()
 
 
 if __name__ == '__main__':
