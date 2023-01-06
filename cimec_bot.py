@@ -2,11 +2,19 @@ import os
 import telebot
 import flask
 import requests
-import conf
 from bs4 import BeautifulSoup
 
-bot = telebot.TeleBot(conf.TOKEN, parse_mode=None)
-doc = requests.get('https://www.cimec.unitn.it/en', headers=conf.HEADERS)
+TOKEN = os.environ["TOKEN"]
+# WEBHOOK_HOST = os.environ["WEBHOOK_HOST"]
+# HEADERS = os.environ["HEADERS"]
+headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) '
+                         'Chrome/50.0.2661.102 Safari/537.36'}
+
+bot = telebot.TeleBot(TOKEN, parse_mode=None)
+bot.remove_webhook()
+bot.set_webhook(url="https://cimecbot.herokuapp.com/")
+
+doc = requests.get('https://www.cimec.unitn.it/en', headers=headers)
 soup = BeautifulSoup(doc.text, 'html.parser')
 app = flask.Flask(__name__)
 
