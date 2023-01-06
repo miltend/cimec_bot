@@ -55,7 +55,8 @@ def events_message(message):
 def echo_all(message):
     bot.send_message(message.chat.id, message.text)
 
-@app.route(f"/{TOKEN}/", methods=['POST'])
+
+@app.route("/bot", methods=['POST'])
 def webhook():
     if flask.request.headers.get('content-type') == 'application/json':
         json_string = flask.request.get_data().decode('utf-8')
@@ -65,11 +66,11 @@ def webhook():
     else:
         flask.abort(403)
 
-bot.infinity_polling()
+# bot.infinity_polling()
 
 
 if __name__ == '__main__':
     app.debug = True
-    # port = int(os.environ.get("PORT", 5000))
-    # app.run(host='0.0.0.0', port=port)
-    app.run(host='0.0.0.0')
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
+    # app.run(host='0.0.0.0')
