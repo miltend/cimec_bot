@@ -5,18 +5,13 @@ import requests
 from bs4 import BeautifulSoup
 
 TOKEN = os.environ["TOKEN"]
-
-# WEBHOOK_HOST = os.environ["WEBHOOK_HOST"]
-# HEADERS = os.environ["HEADERS"]
+NAME = os.environ["NAME"]
 headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) '
                          'Chrome/50.0.2661.102 Safari/537.36'}
-# WEBHOOK_URL_BASE = "https://cimecbot.herokuapp.com"
-
 
 bot = telebot.TeleBot(TOKEN, parse_mode=None)
-
 bot.remove_webhook()
-bot.set_webhook(url="https://cimecbot.herokuapp.com/bot")
+bot.set_webhook(url=f"https://{NAME}.herokuapp.com/bot")
 
 doc = requests.get('https://www.cimec.unitn.it/en', headers=headers)
 soup = BeautifulSoup(doc.text, 'html.parser')
@@ -65,8 +60,6 @@ def webhook():
         return ''
     else:
         flask.abort(403)
-
-# bot.infinity_polling()
 
 
 if __name__ == '__main__':
