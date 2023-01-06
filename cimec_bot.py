@@ -1,53 +1,59 @@
-import flask
+import os
 import telebot
+import flask
+import requests
 import conf
+from bs4 import BeautifulSoup
 
-WEBHOOK_URL_BASE = "https://{}:{}".format(conf.WEBHOOK_HOST, conf.WEBHOOK_PORT)
-WEBHOOK_URL_PATH = "/{}/".format(conf.TOKEN)
-
-telebot.apihelper.proxy = {'https': 'socks5h://geek:socks@t.geekclass.ru:7777'}  # задаем прокси
-bot = telebot.TeleBot(conf.TOKEN,
-                      threaded=False)  # бесплатный аккаунт pythonanywhere запрещает работу с несколькими тредами
-
-# удаляем предыдущие вебхуки, если они были
-bot.remove_webhook()
-
-# ставим новый вебхук = Слышь, если кто мне напишет, стукни сюда — url
-bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_URL_PATH)
-
+bot = telebot.TeleBot(conf.TOKEN, parse_mode=None)
+doc = requests.get('https://www.cimec.unitn.it/en', headers=conf.HEADERS)
+soup = BeautifulSoup(doc.text, 'html.parser')
 app = flask.Flask(__name__)
 
 
-# этот обработчик запускает функцию send_welcome, когда пользователь отправляет команды /start или /help
+def handle_posts(path):
+    posts_list = []
+    posts = path.find_all(attrs="view-content")[0].find_all("a")
+    for post in posts:
+        posts_list.append(post.text.strip() + f"\n<i>Read more:\t <a href='{post['href']}'>link</a></i>" + "\n\n")
+    return posts_list
+
+
 @bot.message_handler(commands=['start', 'help'])
-def send_welcome(message):
-    bot.send_message(message.chat.id, "Здравствуйте! Это бот, который считает длину вашего сообщения.")
+def start_message(message):
+    description = "Bot description. To get the latest CIMeC news type /news. To get events type /events."
+    bot.send_message(message.chat.id, description)
 
 
-@bot.message_handler(func=lambda m: True)  # этот обработчик реагирует все прочие сообщения
-def send_len(message):
-    bot.send_message(message.chat.id, 'В вашем сообщении {} символов.'.format(len(message.text)))
+@bot.message_handler(commands=['news'])
+def news_message(message):
+    news_html = soup.find(text="News").parent.next_sibling.next_sibling
+    news_list = handle_posts(news_html)
+    # news = news_html.find_all(attrs="view-content")[0].find_all("a")
+    # for new in news:
+    #     news_list.append(new.text.strip() + f"\n<i>Read more:\t <a href='{new['href']}'>link</a></i>" + "\n\n")
+    bot.send_message(message.chat.id, "".join(news_list), parse_mode="HTML")
 
 
-# пустая главная страничка для проверки
-@app.route('/', methods=['GET', 'HEAD'])
-def index():
-    return 'ok'
+@bot.message_handler(commands=['events'])
+def events_message(message):
+    event_html = soup.find("h2", text="Events").parent
+    events_list = handle_posts(event_html)
+    # events = event_html.find_all(attrs="view-content")[0].find_all("a")
+    # for event in events:
+    #     events_list.append(event.text.strip() + f"\n<i>Read more:\t <a href='{event['href']}'>link</a></i>" + "\n\n")
+    bot.send_message(message.chat.id, "".join(events_list), parse_mode="HTML")
 
 
-# обрабатываем вызовы вебхука = функция, которая запускается, когда к нам постучался телеграм
-@app.route(WEBHOOK_URL_PATH, methods=['POST'])
-def webhook():
-    if flask.request.headers.get('content-type') == 'application/json':
-        json_string = flask.request.get_data().decode('utf-8')
-        update = telebot.types.Update.de_json(json_string)
-        bot.process_new_updates([update])
-        return ''
-    else:
-        flask.abort(403)
+@bot.message_handler(func=lambda m: True)
+def echo_all(message):
+    bot.send_message(message.chat.id, message.text)
+
+
+bot.infinity_polling()
+
 
 if __name__ == '__main__':
-    import os
     app.debug = True
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
