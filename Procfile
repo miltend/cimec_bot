@@ -1,1 +1,1 @@
- web: python cimec_bot.py
+web: python cimec_bot.py
