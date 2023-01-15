@@ -1,8 +1,9 @@
-import os
-import telebot
-import flask
-import requests
-from bs4 import BeautifulSoup
+# importing necessary libraries
+import os # allows to get environment variables that store sensitive information such as API keys in a separate secret files
+import telebot #allows to create telegram chatbots
+import flask # Flask is an open source Python web framework
+import requests # used to send HTTP requests
+from bs4 import BeautifulSoup # allows to parse the website
 
 # secret files hidden with heroku config
 TOKEN = os.environ["TOKEN"]
@@ -11,19 +12,19 @@ HEADERS = os.environ["HEADERS"]
 
 headers = {'User-Agent': HEADERS}
 bot = telebot.TeleBot(TOKEN, parse_mode=None)
-bot.remove_webhook()
-bot.set_webhook(url=f"https://{NAME}.herokuapp.com/bot")
-doc = requests.get('https://www.cimec.unitn.it/en', headers=headers)
-soup = BeautifulSoup(doc.text, 'html.parser')
-app = flask.Flask(__name__)
+bot.remove_webhook() # empting the url parameter to avoid errors
+bot.set_webhook(url=f"https://{NAME}.herokuapp.com/bot") # webhook supplies Telegram with a location, on which our bot listens for updates
+doc = requests.get('https://www.cimec.unitn.it/en', headers=headers) #  retrieve data from the website
+soup = BeautifulSoup(doc.text, 'html.parser') 
+app = flask.Flask(__name__) #starting using flask
 
 
 # function to crawl data from the cimec site
 def handle_posts(path):
     posts_list = []
-    posts = path.find_all(attrs="view-content")[0].find_all("a")
+    posts = path.find_all(attrs="view-content")[0].find_all("a") #finds all headers which are marked 'a' in hlml site structure
     for post in posts:
-        posts_list.append(post.text.strip() + f"\n<i>Read more:\t <a href='{post['href']}'>link</a></i>" + "\n\n")
+        posts_list.append(post.text.strip() + f"\n<i>Read more:\t <a href='{post['href']}'>link</a></i>" + "\n\n") #creating the list of links
     return posts_list
 
 
@@ -45,7 +46,7 @@ def help_message(message):
 # function that is called when the /news command is typed. Makes a list of the latest cimec news.
 @bot.message_handler(commands=['news'])
 def news_message(message):
-    news_html = soup.find(text="News").parent.next_sibling.next_sibling
+    news_html = soup.find(text="News").parent.next_sibling.next_sibling  # returns the next tag under the same parent.
     news_list = handle_posts(news_html)
     bot.send_message(message.chat.id, "".join(news_list), parse_mode="HTML")
 
@@ -59,7 +60,7 @@ def events_message(message):
 
 
 # function that is called in all other cases
-@bot.message_handler(func=lambda m: True)
+@bot.message_handler(func=lambda m: True) # echoes all incoming text messages back to the sender. It uses a lambda function to test a message
 def echo_all(message):
     reply = "Sorry, I did not understand what you said. Try typing /help for the list of commands or /start to go to " \
             "the beginning "
