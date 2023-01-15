@@ -39,7 +39,7 @@ def start_message(message):
 # function that is called when the /help command is typed
 @bot.message_handler(commands=['help'])
 def help_message(message):
-    reply = "type /start to get the description\ntype /news to get the latest news\ntype /event to get the latest news"
+    reply = "type /start to get the description\ntype /news to get the latest news\ntype /events to get the latest news"
     bot.send_message(message.chat.id, reply)
 
 

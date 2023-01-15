@@ -1,5 +1,5 @@
 # cimec_bot
-This is a telegram chatbot that parses the CIMeC main page and offers an information of the latest news or events.
+This is a telegram chatbot that crawls the CIMeC main page and offers an information of the latest news or events.
 
 The chatbot link: https://t.me/cimec_info_bot
 
